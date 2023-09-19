@@ -1,0 +1,7 @@
+repos:
+  - repo: local
+    hooks:
+    -   id: convert_to_script
+        name: convert_to_script
+        entry: ./scripts/convert_to_script.sh
+        language: system
