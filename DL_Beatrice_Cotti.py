@@ -7,7 +7,7 @@
 # - Matteo Beatrice
 # - Luca Cotti
 # 
-# In this notebook we propose a CycleGAN architecture to convert photos to a Monet-like style, as a submission to the [I'm Something of a Painter Myself](https://www.kaggle.com/c/gan-getting-started) Kaggle competition.
+# In this notebook we develop a CycleGAN architecture to convert photos to a Monet-like style, as a submission to the [I'm Something of a Painter Myself](https://www.kaggle.com/c/gan-getting-started) Kaggle competition.
 
 # ## Initial Setup
 # 
