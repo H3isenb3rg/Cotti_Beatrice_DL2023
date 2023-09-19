@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=67"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dlbc"
+dynamic = ["version"]
+authors = [
+  { name="Matteo Beatrice", email="m.beatrice@studenti.unibs.it" },
+  { name="Luca Cotti", email="l.cotti001@studenti.unibs.it" },
+]
+description = "DL Project"
+readme = {file = "README.md", content-type = "text/markdown"}
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "dlbc.__VERSION__"}
+
+[project.scripts]
+dlbc = "dlbc:console_run"
+
+[project.urls]
+"Homepage" = "https://github.com/H3isenb3rg/Cotti_Beatrice_DL2023"
+"Bug Tracker" = "https://github.com/H3isenb3rg/Cotti_Beatrice_DL2023/issues"
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]

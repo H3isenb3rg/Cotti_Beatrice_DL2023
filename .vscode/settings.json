@@ -1,0 +1,14 @@
+{
+    "python.analysis.typeCheckingMode": "basic",
+    "files.autoSave": "afterDelay",
+    "flake8.args": [
+        "--ignore=E401, W503",
+        "--max-line-length=160",
+        "--per-file-ignores=__init__.py:F401"
+    ],
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}

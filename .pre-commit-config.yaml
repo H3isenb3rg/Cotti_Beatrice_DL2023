@@ -1,7 +1,42 @@
 repos:
-  - repo: local
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
     hooks:
-    -   id: convert_to_script
-        name: convert_to_script
-        entry: ./scripts/convert_to_script.sh
+    -   id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+        stages: [commit, merge-commit, push, manual]
+    -   id: end-of-file-fixer
+        stages: [commit, merge-commit, push, manual]
+    -   id: check-yaml
+        stages: [commit, merge-commit, push, manual]
+    -   id: check-toml
+        stages: [commit, merge-commit, push, manual]
+    -   id: check-json
+        stages: [commit, merge-commit, push, manual]
+    -   id: check-added-large-files
+        stages: [commit, merge-commit, push, manual]
+    -   id: detect-private-key
+        stages: [commit, merge-commit, push, manual]
+    -   id: pretty-format-json
+        args: [--autofix]
+        stages: [commit, merge-commit, push, manual]
+-   repo: https://github.com/Lucas-C/pre-commit-hooks-safety
+    rev: v1.3.1
+    hooks:
+    -   id: python-safety-dependencies-check
+        files: requirements.txt
+        stages: [commit, merge-commit, push, manual]
+-   repo: https://github.com/PyCQA/bandit
+    rev: 1.7.5
+    hooks:
+    -   id: bandit
+        stages: [manual]
+-   repo: local
+    hooks:
+    -   id: pytest-check
+        stages: [commit, merge-commit, push, manual]
+        name: pytest-check
+        entry: pytest
         language: system
+        pass_filenames: false
+        always_run: true
