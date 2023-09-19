@@ -34,14 +34,12 @@ LAMBDA_END = 1e-4
 GAMMA_START = 1e-4
 GAMMA_END = 0.999
 
-UPLOAD_MODEL = False
-
 USE_BETTER_CYCLES = True # Whether to use better CycleGAN cycles or not
 USE_UNET = True # Whether to use UNET CycleGAN model instead of the basic one
 USE_DIFF_AUGMENT = True # Whether to use DiffAugment
+USE_SAVED_WEIGHTS = False # Whether to use a pretrained model or not
 
-MODEL_FILE_NAME = "dl_beatrice_cotti.keras"
-CHECKPOINT_FILE_NAME = "dl_beatrice_cotti_cp.ckpt"
+WEIGHTS_FILE_NAME = "dl_beatrice_cotti.keras"
 
 
 # ### Import Packages
@@ -959,11 +957,14 @@ with strategy.scope():
   if USE_BETTER_CYCLES:
     callbacks.append(update_weights_cb)
 
-history = gan_model.fit(gan_ds,
-                        epochs=EPOCHS,
-                        steps_per_epoch=(max(n_monet_samples, n_photo_samples)//BATCH_SIZE),
-                        callbacks=callbacks
-                        ).history
+if USE_SAVED_WEIGHTS:
+    gan_model.load_weights(WEIGHTS_FILE_NAME)
+else:
+    gan_model.fit(gan_ds,
+                  epochs=EPOCHS,
+                  steps_per_epoch=(max(n_monet_samples, n_photo_samples)//BATCH_SIZE),
+                  callbacks=callbacks
+                  )
 
 
 # ## Results
@@ -995,14 +996,41 @@ def display_generated_samples(ds, model, n_samples):
 display_generated_samples(photo_ds_eval.take(8), monet_generator, 8)
 
 
-# ### Save Model
+# ### Save Weights
 
 # In[ ]:
 
 
-gan_model.save(MODEL_FILE_NAME)
+gan_model.save_weights(WEIGHTS_FILE_NAME)
 
 if IS_COLAB:
     from google.colab import files
-    files.download(MODEL_FILE_NAME)
+    files.download(WEIGHTS_FILE_NAME)
+
+
+# ### Create Submission File
+
+# In[ ]:
+
+
+import PIL
+
+get_ipython().run_line_magic('mkdir', './submission')
+
+i = 1
+for img in photo_ds:
+    prediction = monet_generator(img, training=False)[0].numpy()
+    prediction = (prediction * 127.5 + 127.5).astype(np.uint8)
+    im = PIL.Image.fromarray(prediction)
+    im.save("./submission/" + str(i) + ".jpg")
+    i += 1
+
+
+# In[4]:
+
+
+import shutil
+shutil.make_archive("./submission", 'zip', "./submission")
+
+get_ipython().run_line_magic('rm', '-r ./submission')
 
