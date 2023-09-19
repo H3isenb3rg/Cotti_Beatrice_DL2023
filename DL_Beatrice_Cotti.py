@@ -145,8 +145,6 @@ if IS_COLAB:
     # Move API key file to ~/.kaggle dir
     # TODO: change this so the key is not left in the home dir of the uni computer
     get_ipython().system('cp /content/drive/MyDrive/kaggle.json ~/.kaggle/')
-else:
-    get_ipython().system('cp kaggle.json ~/.kaggle/')
 
 get_ipython().system('chmod 600 ~/.kaggle/kaggle.json')
 
@@ -155,7 +153,6 @@ get_ipython().system('rm -r gan-getting-started # Remove dir if it already exist
 get_ipython().system('mkdir gan-getting-started')
 get_ipython().system('unzip -qq gan-getting-started.zip -d gan-getting-started')
 get_ipython().system('rm gan-getting-started.zip')
-get_ipython().system('rm ~/.kaggle/kaggle.json # Remove API key from home dir')
 
 DATASET_PATH = "gan-getting-started"
 
