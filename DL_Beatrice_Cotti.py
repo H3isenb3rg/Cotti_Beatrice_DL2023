@@ -130,7 +130,7 @@ print('Number of replicas:', strategy.num_replicas_in_sync)
 # 3.   Scroll to API section
 # 4.   Click `Expire API Token` to remove previous tokens
 # 5.   Click on `Create New API Token` - It will download `kaggle.json`  file on your machine.
-# 6.   Upload `kaggle.json` to your Google Drive if the notebook is running on Google Colab, otherwise add it to the same dir where this notebook is located.
+# 6.   Upload `kaggle.json` to your Google Drive if the notebook is running on Google Colab, otherwise add it to ~/.kaggle/ on your machine.
 
 # In[ ]:
 
@@ -927,12 +927,13 @@ with strategy.scope():
 # In[ ]:
 
 
-monet_ds = get_dataset(MONET_FILENAMES, augment=data_augment, batch_size=BATCH_SIZE)
-photo_ds = get_dataset(PHOTO_FILENAMES, augment=data_augment, batch_size=BATCH_SIZE)
-gan_ds = tf.data.Dataset.zip((monet_ds, photo_ds))
+with strategy.scope():
+    monet_ds = get_dataset(MONET_FILENAMES, augment=data_augment, batch_size=BATCH_SIZE)
+    photo_ds = get_dataset(PHOTO_FILENAMES, augment=data_augment, batch_size=BATCH_SIZE)
+    gan_ds = tf.data.Dataset.zip((monet_ds, photo_ds))
 
-photo_ds_eval = get_dataset(PHOTO_FILENAMES, repeat=False, shuffle=False, batch_size=1)
-monet_ds_eval = get_dataset(MONET_FILENAMES, repeat=False, shuffle=False, batch_size=1)
+    photo_ds_eval = get_dataset(PHOTO_FILENAMES, repeat=False, shuffle=False, batch_size=1)
+    monet_ds_eval = get_dataset(MONET_FILENAMES, repeat=False, shuffle=False, batch_size=1)
 
 
 # ### Launch Training
@@ -941,22 +942,23 @@ monet_ds_eval = get_dataset(MONET_FILENAMES, repeat=False, shuffle=False, batch_
 
 
 # Create GAN
-gan_model = CycleGan(monet_generator, photo_generator,
-                         monet_discriminator, photo_discriminator)
+with strategy.scope():
+  gan_model = CycleGan(monet_generator, photo_generator,
+                          monet_discriminator, photo_discriminator)
 
-gan_model.compile(m_gen_optimizer=monet_generator_optimizer,
-                  p_gen_optimizer=photo_generator_optimizer,
-                  m_disc_optimizer=monet_discriminator_optimizer,
-                  p_disc_optimizer=photo_discriminator_optimizer,
-                  gen_loss_fn=generator_loss,
-                  disc_loss_fn=discriminator_loss,
-                  cycle_loss_fn=calc_cycle_loss,
-                  identity_loss_fn=identity_loss)
+  gan_model.compile(m_gen_optimizer=monet_generator_optimizer,
+                    p_gen_optimizer=photo_generator_optimizer,
+                    m_disc_optimizer=monet_discriminator_optimizer,
+                    p_disc_optimizer=photo_discriminator_optimizer,
+                    gen_loss_fn=generator_loss,
+                    disc_loss_fn=discriminator_loss,
+                    cycle_loss_fn=calc_cycle_loss,
+                    identity_loss_fn=identity_loss)
 
-callbacks=[]
+  callbacks=[]
 
-if USE_BETTER_CYCLES:
-  callbacks.append(update_weights_cb)
+  if USE_BETTER_CYCLES:
+    callbacks.append(update_weights_cb)
 
 history = gan_model.fit(gan_ds,
                         epochs=EPOCHS,

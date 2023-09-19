@@ -8,5 +8,7 @@
 #SBATCH --gres=gpu:2
 #SBATCH --partition=batch
 
+conda activate beatrice_cotti_dl
+
 # Run notebook
 ipython DL_Beatrice_Cotti.py
