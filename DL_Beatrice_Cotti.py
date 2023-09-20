@@ -696,17 +696,19 @@ class CycleGan(keras.Model):
             same_photo = self.p_gen(real_photo, training=True)
 
             # DiffAugment
-            both_monet = tf.concat([real_monet, fake_monet], axis=0)
-            aug_monet = aug_fn(both_monet)
-            aug_real_monet = aug_monet[:BATCH_SIZE]
-            aug_fake_monet = aug_monet[BATCH_SIZE:]
+            if USE_DIFF_AUGMENT:
+                both_monet = tf.concat([real_monet, fake_monet], axis=0)
+                aug_monet = aug_fn(both_monet)
+                aug_real_monet = aug_monet[:BATCH_SIZE]
+                aug_fake_monet = aug_monet[BATCH_SIZE:]
 
-            # discriminator used to check, inputing real images
-            disc_real_monet = self.m_disc(real_monet, training=True)
+                disc_real_monet = self.m_disc(aug_real_monet, training=True)
+                disc_fake_monet = self.m_disc(aug_fake_monet, training=True)
+            else:
+                disc_real_monet = self.m_disc(real_monet, training=True)
+                disc_fake_monet = self.m_disc(fake_monet, training=True)
+
             disc_real_photo = self.p_disc(real_photo, training=True)
-
-            # discriminator used to check, inputing fake images
-            disc_fake_monet = self.m_disc(fake_monet, training=True)
             disc_fake_photo = self.p_disc(fake_photo, training=True)
 
             # evaluates generator loss
