@@ -1015,14 +1015,14 @@ if IS_COLAB:
 
 import PIL
 
-get_ipython().run_line_magic('mkdir', './submission')
+get_ipython().run_line_magic('mkdir', './submissions')
 
 i = 1
 for img in photo_ds:
     prediction = monet_generator(img, training=False)[0].numpy()
     prediction = (prediction * 127.5 + 127.5).astype(np.uint8)
     im = PIL.Image.fromarray(prediction)
-    im.save("./submission/" + str(i) + ".jpg")
+    im.save("./submissions/" + str(i) + ".jpg")
     i += 1
 
 
@@ -1030,7 +1030,7 @@ for img in photo_ds:
 
 
 import shutil
-shutil.make_archive("./submission", 'zip', "./submission")
+shutil.make_archive("./submissions", 'zip', "./submissions")
 
 get_ipython().run_line_magic('rm', '-r ./submission')
 
