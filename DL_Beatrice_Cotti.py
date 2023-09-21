@@ -36,7 +36,7 @@ GAMMA_END = 0.999
 
 USE_BETTER_CYCLES = True # Whether to use better CycleGAN cycles or not
 USE_UNET = True # Whether to use UNET CycleGAN model instead of the basic one
-USE_DIFF_AUGMENT = True # Whether to use DiffAugment
+USE_DIFF_AUGMENT = False # Whether to use DiffAugment
 USE_SAVED_WEIGHTS = False # Whether to use a pretrained model or not
 
 WEIGHTS_FILE_NAME = "dl_beatrice_cotti.keras"
