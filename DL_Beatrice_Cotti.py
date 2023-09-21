@@ -36,7 +36,7 @@ GAMMA_END = 0.999
 
 USE_BETTER_CYCLES = True # Whether to use better CycleGAN cycles or not
 USE_UNET = True # Whether to use UNET CycleGAN model instead of the basic one
-USE_DIFF_AUGMENT = False # Whether to use DiffAugment
+USE_DIFF_AUGMENT = True # Whether to use DiffAugment
 USE_SAVED_WEIGHTS = False # Whether to use a pretrained model or not
 
 WEIGHTS_FILE_NAME = "dl_beatrice_cotti.keras"
@@ -284,7 +284,7 @@ with strategy.scope():
         'cutout': [rand_cutout],
     }
 
-    def aug_fn(image):
+    def aug(image):
         return DiffAugment(image,"color,translation,cutout")
 
 
@@ -662,7 +662,8 @@ class CycleGan(keras.Model):
         gen_loss_fn,
         disc_loss_fn,
         cycle_loss_fn,
-        identity_loss_fn
+        identity_loss_fn,
+        aug_fn
     ):
         super(CycleGan, self).compile()
         self.m_gen_optimizer = m_gen_optimizer
@@ -673,6 +674,7 @@ class CycleGan(keras.Model):
         self.disc_loss_fn = disc_loss_fn
         self.cycle_loss_fn = cycle_loss_fn
         self.identity_loss_fn = identity_loss_fn
+        self.aug_fn = aug_fn
 
     def train_step(self, batch_data):
         real_monet, real_photo = batch_data
@@ -693,7 +695,7 @@ class CycleGan(keras.Model):
             # DiffAugment
             if USE_DIFF_AUGMENT:
                 both_monet = tf.concat([real_monet, fake_monet], axis=0)
-                aug_monet = aug_fn(both_monet)
+                aug_monet = self.aug_fn(both_monet)
                 aug_real_monet = aug_monet[:BATCH_SIZE]
                 aug_fake_monet = aug_monet[BATCH_SIZE:]
 
@@ -947,7 +949,9 @@ with strategy.scope():
                     gen_loss_fn=generator_loss,
                     disc_loss_fn=discriminator_loss,
                     cycle_loss_fn=calc_cycle_loss,
-                    identity_loss_fn=identity_loss)
+                    identity_loss_fn=identity_loss,
+                    aug_fn=aug
+                    )
 
   callbacks=[]
 
