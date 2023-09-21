@@ -2,7 +2,7 @@
 
 #SBATCH -N 1
 #SBATCH --job-name=beatrice_cotti_dl
-#SBATCH --time=02:00:00
+#SBATCH --time=03:00:00
 #SBATCH --qos=normal 
 #SBATCH --mem=20000
 #SBATCH --gres=gpu:2

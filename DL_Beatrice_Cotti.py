@@ -14,7 +14,7 @@
 
 # ### Model Parameters
 
-# In[ ]:
+# In[1]:
 
 
 HEIGHT = 256 # Height of images
@@ -46,7 +46,7 @@ WEIGHTS_FILE_NAME = "dl_beatrice_cotti.keras"
 # 
 # Let's begin by identifying if the notebook is running on Colab.
 
-# In[ ]:
+# In[2]:
 
 
 import os
@@ -58,14 +58,14 @@ IS_COLAB = os.getenv("COLAB_RELEASE_TAG") is not None
 # - `kaggle`: to download the kaggle competition, and create a submission.
 # - `tensorflow-addons`: provides `InstanceNormalization` layer.
 
-# In[ ]:
+# In[3]:
 
 
 if IS_COLAB:
     get_ipython().run_line_magic('pip', 'install -q kaggle tensorflow-addons')
 
 
-# In[ ]:
+# In[4]:
 
 
 import random, re
@@ -94,7 +94,7 @@ os.environ['TF_DETERMINISTIC_OPS'] = '1'
 # 
 # Read the [distributed training documentation](https://www.tensorflow.org/guide/distributed_training) for more info on strategies.
 
-# In[ ]:
+# In[5]:
 
 
 try:
@@ -130,7 +130,7 @@ print('Number of replicas:', strategy.num_replicas_in_sync)
 # 5.   Click on `Create New API Token` - It will download `kaggle.json`  file on your machine.
 # 6.   Upload `kaggle.json` to your Google Drive if the notebook is running on Google Colab, otherwise add it to ~/.kaggle/ on your machine.
 
-# In[ ]:
+# In[6]:
 
 
 get_ipython().system('mkdir ~/.kaggle')
@@ -157,7 +157,7 @@ DATASET_PATH = "gan-getting-started"
 
 # Check the number of TFRecords and of actual image files.
 
-# In[ ]:
+# In[7]:
 
 
 # Load the filenames of the TFRecords
@@ -182,7 +182,7 @@ print(f'Photo image files: {n_photo_samples}')
 # 
 # Data augmentation for GANs should be done very carefully, especially for tasks similar to style transfer. If we apply transformations that can change too much the style of the data (e.g. brightness, contrast, saturation) it can cause the generator to do not efficiently learn the base style, so in this case, we are using only spatial transformations like flips, rotations and crops.
 
-# In[ ]:
+# In[8]:
 
 
 def data_augment(image):
@@ -219,7 +219,7 @@ def data_augment(image):
 # 
 # See https://www.kaggle.com/code/unfriendlyai/diffaugment-is-all-you-need/notebook.
 
-# In[ ]:
+# In[9]:
 
 
 with strategy.scope():
@@ -234,23 +234,20 @@ with strategy.scope():
                 x = tf.transpose(x, [0, 3, 1, 2])
         return x
 
-
     def rand_brightness(x):
         magnitude = tf.random.uniform([tf.shape(x)[0], 1, 1, 1]) - 0.5
         x = x + magnitude
         return x
 
-
     def rand_saturation(x):
         magnitude = tf.random.uniform([tf.shape(x)[0], 1, 1, 1]) * 2
-        x_mean = tf.reduce_sum(x, axis=3, keepdims=True) * 0.3333333333333333333
+        x_mean = tf.reduce_mean(x, axis=3, keepdims=True)
         x = (x - x_mean) * magnitude + x_mean
         return x
 
-
     def rand_contrast(x):
         magnitude = tf.random.uniform([tf.shape(x)[0], 1, 1, 1]) + 0.5
-        x_mean = tf.reduce_sum(x, axis=[1, 2, 3], keepdims=True) * 5.086e-6
+        x_mean = tf.reduce_mean(x, axis=[1, 2, 3], keepdims=True)
         x = (x - x_mean) * magnitude + x_mean
         return x
 
@@ -265,7 +262,6 @@ with strategy.scope():
         x = tf.gather_nd(tf.pad(x, [[0, 0], [1, 1], [0, 0], [0, 0]]), tf.expand_dims(grid_x, -1), batch_dims=1)
         x = tf.transpose(tf.gather_nd(tf.pad(tf.transpose(x, [0, 2, 1, 3]), [[0, 0], [1, 1], [0, 0], [0, 0]]), tf.expand_dims(grid_y, -1), batch_dims=1), [0, 2, 1, 3])
         return x
-
 
     def rand_cutout(x, ratio=0.5):
         batch_size = tf.shape(x)[0]
@@ -282,7 +278,6 @@ with strategy.scope():
         x = x * tf.expand_dims(mask, axis=3)
         return x
 
-
     AUGMENT_FNS = {
         'color': [rand_brightness, rand_saturation, rand_contrast],
         'translation': [rand_translation],
@@ -295,7 +290,7 @@ with strategy.scope():
 
 # ### Utility Functions
 
-# In[ ]:
+# In[10]:
 
 
 # Reads a tensor as an image.
@@ -351,7 +346,7 @@ def get_dataset(filenames, augment=None, repeat=True, shuffle=True, batch_size=1
 
 # Let's test if the datasets loads correctly.
 
-# In[ ]:
+# In[11]:
 
 
 monet_ds = get_dataset(MONET_FILENAMES)
@@ -1028,7 +1023,7 @@ for img in photo_ds:
     i += 1
 
 
-# In[4]:
+# In[ ]:
 
 
 import shutil
