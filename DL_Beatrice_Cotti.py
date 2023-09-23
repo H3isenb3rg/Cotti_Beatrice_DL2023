@@ -24,7 +24,7 @@ HEIGHT_RESIZE = 128 # Height of image crop augmentation
 WIDTH_RESIZE = 128 # Width of image crop augmentation
 
 TRANSFORMER_BLOCKS = 6 # Number of transformer blocks in CycleGAN model
-BATCH_SIZE = 17
+BATCH_SIZE = 16
 EPOCHS = 5
 LAMBDA_ID=1e-5
 LAMBDA=10
