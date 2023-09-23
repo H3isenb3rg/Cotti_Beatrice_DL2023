@@ -24,7 +24,7 @@ HEIGHT_RESIZE = 128 # Height of image crop augmentation
 WIDTH_RESIZE = 128 # Width of image crop augmentation
 
 TRANSFORMER_BLOCKS = 6 # Number of transformer blocks in CycleGAN model
-BATCH_SIZE = 16
+BATCH_SIZE = 17
 EPOCHS = 5
 LAMBDA_ID=1e-5
 LAMBDA=10
@@ -36,7 +36,7 @@ GAMMA_END = 0.999
 
 USE_BETTER_CYCLES = True # Whether to use better CycleGAN cycles or not
 USE_UNET = True # Whether to use UNET CycleGAN model instead of the basic one
-USE_DIFF_AUGMENT = False # Whether to use DiffAugment
+USE_DIFF_AUGMENT = True # Whether to use DiffAugment
 USE_SAVED_WEIGHTS = False # Whether to use a pretrained model or not
 
 WEIGHTS_FILE_NAME = "dl_beatrice_cotti.keras"
