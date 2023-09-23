@@ -4,8 +4,8 @@
 #SBATCH --job-name=beatrice_cotti_dl
 #SBATCH --time=03:00:00
 #SBATCH --qos=normal 
-#SBATCH --mem=30000
-#SBATCH --gres=gpu:2
+#SBATCH --mem=20000
+#SBATCH --gres=gpu:1
 #SBATCH --partition=batch
 
 # Run notebook
