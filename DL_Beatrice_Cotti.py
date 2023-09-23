@@ -928,9 +928,6 @@ monet_ds = get_dataset(MONET_FILENAMES, augment=data_augment, batch_size=BATCH_S
 photo_ds = get_dataset(PHOTO_FILENAMES, augment=data_augment, batch_size=BATCH_SIZE)
 gan_ds = tf.data.Dataset.zip((monet_ds, photo_ds))
 
-dataset_length = len(list(gan_ds))
-print("Length of the resulting dataset:", dataset_length)
-
 photo_ds_eval = get_dataset(PHOTO_FILENAMES, repeat=False, shuffle=False, batch_size=1)
 monet_ds_eval = get_dataset(MONET_FILENAMES, repeat=False, shuffle=False, batch_size=1)
 
