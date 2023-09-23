@@ -14,7 +14,7 @@
 
 # ### Model Parameters
 
-# In[1]:
+# In[ ]:
 
 
 HEIGHT = 256 # Height of images
@@ -46,7 +46,7 @@ WEIGHTS_FILE_NAME = "dl_beatrice_cotti.keras"
 # 
 # Let's begin by identifying if the notebook is running on Colab.
 
-# In[2]:
+# In[ ]:
 
 
 import os
@@ -58,14 +58,14 @@ IS_COLAB = os.getenv("COLAB_RELEASE_TAG") is not None
 # - `kaggle`: to download the kaggle competition, and create a submission.
 # - `tensorflow-addons`: provides `InstanceNormalization` layer.
 
-# In[3]:
+# In[ ]:
 
 
 if IS_COLAB:
     get_ipython().run_line_magic('pip', 'install -q kaggle tensorflow-addons')
 
 
-# In[4]:
+# In[ ]:
 
 
 import random, re
@@ -94,7 +94,7 @@ os.environ['TF_DETERMINISTIC_OPS'] = '1'
 # 
 # Read the [distributed training documentation](https://www.tensorflow.org/guide/distributed_training) for more info on strategies.
 
-# In[5]:
+# In[ ]:
 
 
 try:
@@ -130,18 +130,17 @@ print('Number of replicas:', strategy.num_replicas_in_sync)
 # 5.   Click on `Create New API Token` - It will download `kaggle.json`  file on your machine.
 # 6.   Upload `kaggle.json` to your Google Drive if the notebook is running on Google Colab, otherwise add it to ~/.kaggle/ on your machine.
 
-# In[6]:
+# In[ ]:
 
-
-get_ipython().system('mkdir ~/.kaggle')
 
 if IS_COLAB:
     # Mount drive dir
     from google.colab import drive
     drive.mount('/content/drive')
+    
+    get_ipython().system('mkdir ~/.kaggle')
 
     # Move API key file to ~/.kaggle dir
-    # TODO: change this so the key is not left in the home dir of the uni computer
     get_ipython().system('cp /content/drive/MyDrive/kaggle.json ~/.kaggle/')
 
 get_ipython().system('chmod 600 ~/.kaggle/kaggle.json')
@@ -157,7 +156,7 @@ DATASET_PATH = "gan-getting-started"
 
 # Check the number of TFRecords and of actual image files.
 
-# In[7]:
+# In[ ]:
 
 
 # Load the filenames of the TFRecords
@@ -182,7 +181,7 @@ print(f'Photo image files: {n_photo_samples}')
 # 
 # Data augmentation for GANs should be done very carefully, especially for tasks similar to style transfer. If we apply transformations that can change too much the style of the data (e.g. brightness, contrast, saturation) it can cause the generator to do not efficiently learn the base style, so in this case, we are using only spatial transformations like flips, rotations and crops.
 
-# In[8]:
+# In[ ]:
 
 
 def data_augment(image):
@@ -219,7 +218,7 @@ def data_augment(image):
 # 
 # See https://www.kaggle.com/code/unfriendlyai/diffaugment-is-all-you-need/notebook.
 
-# In[9]:
+# In[ ]:
 
 
 with strategy.scope():
@@ -290,7 +289,7 @@ with strategy.scope():
 
 # ### Utility Functions
 
-# In[10]:
+# In[ ]:
 
 
 # Reads a tensor as an image.
@@ -332,13 +331,14 @@ def get_dataset(filenames, augment=None, repeat=True, shuffle=True, batch_size=1
 
     dataset = dataset.map(normalize_img, num_parallel_calls=tf.data.AUTOTUNE)
 
+    dataset = dataset.cache()
+
     if repeat:
         dataset = dataset.repeat()
     if shuffle:
         dataset = dataset.shuffle(512)
 
     dataset = dataset.batch(batch_size)
-    dataset = dataset.cache()
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
     return dataset
@@ -346,7 +346,7 @@ def get_dataset(filenames, augment=None, repeat=True, shuffle=True, batch_size=1
 
 # Let's test if the datasets loads correctly.
 
-# In[11]:
+# In[ ]:
 
 
 monet_ds = get_dataset(MONET_FILENAMES)
