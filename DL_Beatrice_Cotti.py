@@ -25,7 +25,7 @@ WIDTH_RESIZE = 128 # Width of image crop augmentation
 
 TRANSFORMER_BLOCKS = 6 # Number of transformer blocks in CycleGAN model
 BATCH_SIZE = 16
-EPOCHS = 5
+EPOCHS = 8
 LAMBDA_ID=1e-5
 LAMBDA=10
 GAMMA=1e-4
@@ -779,11 +779,7 @@ class CycleGan(keras.Model):
 
 
 with strategy.scope():
-    @tf.function
     def discriminator_loss(real, generated):
-        if (tf.size(generated) == 0):
-            return 0
-
         real_loss = keras.losses.BinaryCrossentropy(from_logits=True,
                                                        reduction=tf.keras.losses.Reduction.NONE)(tf.ones_like(real), real)
         real_loss = tf.reduce_mean(real_loss)
@@ -803,11 +799,7 @@ with strategy.scope():
 
 
 with strategy.scope():
-    @tf.function
     def generator_loss(generated):
-        if (tf.size(generated) == 0):
-            return 0
-
         loss = keras.losses.BinaryCrossentropy(from_logits=True, reduction=tf.keras.losses.Reduction.NONE)(tf.ones_like(generated), generated)
         loss = tf.reduce_mean(loss)
 
@@ -820,11 +812,7 @@ with strategy.scope():
 
 
 with strategy.scope():
-    @tf.function
     def calc_cycle_loss(real_image, cycled_image, LAMBDA):
-        if (tf.size(cycled_image) == 0):
-            return 0
-
         loss1 = tf.reduce_mean(tf.abs(real_image - cycled_image))
 
         return LAMBDA * loss1
@@ -836,11 +824,7 @@ with strategy.scope():
 
 
 with strategy.scope():
-    @tf.function
     def identity_loss(real_image, same_image, LAMBDA):
-        if (tf.size(cycled_image) == 0):
-            return 0
-
         loss = tf.reduce_mean(tf.abs(real_image - same_image))
         return LAMBDA * 0.5 * loss
 
