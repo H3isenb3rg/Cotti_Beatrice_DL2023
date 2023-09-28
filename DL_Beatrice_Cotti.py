@@ -575,7 +575,7 @@ def BasicDiscriminator(height=HEIGHT, width=WIDTH, channels=CHANNELS):
 # In[ ]:
 
 
-def UNETDiscriminator(height=HEIGHT, width=WIDTH, channels=CHANNELS):
+def UNETDiscriminator(height=HEIGHT, width=WIDTH, channels=CHANNELS, add_noise=True):
     initializer = tf.random_normal_initializer(0., 0.02)
     gamma_init = keras.initializers.RandomNormal(mean=0.0, stddev=0.02)
 
@@ -591,6 +591,8 @@ def UNETDiscriminator(height=HEIGHT, width=WIDTH, channels=CHANNELS):
     conv = layers.Conv2D(512, 4, strides=1,
                          kernel_initializer=initializer,
                          use_bias=False)(zero_pad1) # (bs, 31, 31, 512)
+    if add_noise:
+        conv = GaussianNoise(0.2)(conv)
 
     norm1 = tfa.layers.InstanceNormalization(gamma_initializer=gamma_init)(conv)
 
@@ -831,7 +833,7 @@ with strategy.scope():
 
 # ## Training
 
-# ### Update Loss Weights Callback
+# ### Loss Weights Callback
 
 # In[ ]:
 
@@ -904,6 +906,95 @@ class LinearScheduleWithWarmup(tf.keras.optimizers.schedules.LearningRateSchedul
       return lr
 
 
+# ### MiFID Calculator
+
+# In[ ]:
+
+
+class FIDCalculator(object):
+    def __init__(self, images_x_ds, images_y_ds, model_generator, fid_model_base):
+        self.images_x_ds = images_x_ds
+        self.images_y_ds = images_y_ds
+        self.model_generator = model_generator
+        self.fid_model_base = fid_model_base
+        self.initialized = False
+        self.history = []
+
+    def init_stat_x(self):
+        self.mu_2, self.sigma_2 = self._calculate_activation_statistics_mod(self.images_y_ds, self.fid_model_base)
+        self.initialized = True
+
+    def _calculate_activation_statistics_mod(self, images, fid_model):
+        act = tf.cast(fid_model.predict(images, verbose=0), tf.float32)
+        mu = tf.reduce_mean(act, axis=0)
+        mean_x = tf.reduce_mean(act, axis=0, keepdims=True)
+        mx = tf.matmul(tf.transpose(mean_x), mean_x)
+        vx = tf.matmul(tf.transpose(act), act)/tf.cast(tf.shape(act)[0], tf.float32)
+        sigma = vx - mx
+        return mu, sigma
+
+    def _calculate_frechet_distance(self, mu_1, sigma_1, mu_2, sigma_2):
+        fid_epsilon = 1e-14
+        covmean = tf.linalg.sqrtm(tf.cast(tf.matmul(sigma_1, sigma_2), tf.complex64))
+        covmean = tf.cast(tf.math.real(covmean), tf.float32)
+        tr_covmean = tf.linalg.trace(covmean)
+        fid_value = tf.matmul(
+            tf.expand_dims(mu_1 - mu_2, axis=0),
+            tf.expand_dims(mu_1 - mu_2, axis=1)
+            ) + tf.linalg.trace(sigma_1) + tf.linalg.trace(sigma_2) - 2 * tr_covmean
+        return fid_value
+
+    def _get_gen_plus_fid_model(self):
+        inputs = layers.Input(shape=[256, 256, 3], name='input_image')
+        x = self.model_generator(inputs)
+        outputs = self.fid_model_base(x)
+        fid_model = tf.keras.Model(inputs=inputs, outputs=outputs)
+        return fid_model
+
+    def calc_fid(self):
+        if not self.initialized:
+            self.init_stat_x()
+        fid_model_plus = self._get_gen_plus_fid_model()
+        mu_1, sigma_1 = self._calculate_activation_statistics_mod(self.images_x_ds, fid_model_plus)
+        fid_value = self._calculate_frechet_distance(mu_1, sigma_1, self.mu_2, self.sigma_2)
+        return fid_value
+
+
+# In[ ]:
+
+
+def create_fid_inception_model():
+    inception_model_base = tf.keras.applications.InceptionV3(
+        input_shape=(256,256,3),
+        pooling="avg",
+        include_top=False)
+    mix3  = inception_model_base.get_layer("mixed9").output
+    f0 = tf.keras.layers.GlobalAveragePooling2D()(mix3)
+    inception_model = tf.keras.Model(inputs=inception_model_base.input, outputs=f0)
+    inception_model.trainable = False
+    return inception_model
+
+
+# In[ ]:
+
+
+class FIDCallback(Callback):
+    def __init__(self, fid_calculator, epoch_interval=None):
+        self.fid_calculator = fid_calculator
+        self.epoch_interval = epoch_interval
+
+    def _get_fid(self):
+        fid = self.fid_calculator.calc_fid()
+        print("FID score:", fid.numpy()[0,0])
+
+    def on_epoch_end(self, epoch, logs=None):
+        if self.epoch_interval and epoch % self.epoch_interval == 0:
+            self._get_fid()
+
+    def on_train_end(self, logs=None):
+        self._get_fid()
+
+
 # ### Optimizers
 
 # In[ ]:
@@ -931,6 +1022,23 @@ gan_ds = tf.data.Dataset.zip((monet_ds, photo_ds))
 photo_ds_eval = get_dataset(PHOTO_FILENAMES, repeat=False, shuffle=False, batch_size=1)
 monet_ds_eval = get_dataset(MONET_FILENAMES, repeat=False, shuffle=False, batch_size=1)
 
+fid_photo_ds = load_dataset(PHOTO_FILENAMES).take(1024).batch(32*strategy.num_replicas_in_sync).prefetch(32)
+fid_monet_ds = load_dataset(MONET_FILENAMES).batch(32*strategy.num_replicas_in_sync).prefetch(32)
+
+
+# In[ ]:
+
+
+with strategy.scope():
+    fid_model = create_fid_inception_model()
+    fid_calc = FIDCalculator(
+        images_x_ds=fid_photo_ds,
+        images_y_ds=fid_monet_ds,
+        model_generator=generator_g,
+        fid_model_base=fid_model)
+    fid_calc.init_stat_x()
+    fid_cb = FIDCallback(fid_calculator=fid_calc, epoch_interval=EPOCH_INTERVAL_FID)
+
 
 # ### Launch Training
 
@@ -953,7 +1061,7 @@ with strategy.scope():
                     aug_fn=aug
                     )
 
-  callbacks=[]
+  callbacks=[fid_cb]
 
   if USE_BETTER_CYCLES:
     callbacks.append(update_weights_cb)

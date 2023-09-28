@@ -130,3 +130,6 @@ dmypy.json
 
 # Submission files
 submissions/
+
+# Weights
+dl_beatrice_cotti.keras
