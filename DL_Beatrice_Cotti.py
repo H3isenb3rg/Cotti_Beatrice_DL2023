@@ -773,18 +773,6 @@ class CycleGan(keras.Model):
         }
 
 
-# ### Plot models
-
-# In[ ]:
-
-
-tf.keras.utils.plot_model(BasicGenerator(), to_file='images/basic_generator.png', show_shapes=True)
-tf.keras.utils.plot_model(UNETGenerator(), to_file='images/unet_generator.png', show_shapes=True)
-tf.keras.utils.plot_model(BasicDiscriminator(), to_file='images/basic_discriminator.png', show_shapes=True)
-tf.keras.utils.plot_model(UNETDiscriminator(), to_file='images/unet_discriminator.png', show_shapes=True)
-tf.keras.utils.plot_model(CycleGan(), to_file='images/cycle_gan.png', show_shapes=True)
-
-
 # ### Loss functions
 # 
 # The discriminator loss function below compares real images to a matrix of 1s and fake images to a matrix of 0s. The perfect discriminator will output all 1s for real images and all 0s for fake images. The discriminator loss outputs the average of the real and generated loss.
@@ -990,7 +978,7 @@ def create_fid_inception_model():
 # In[ ]:
 
 
-class FIDCallback(Callback):
+class FIDCallback(tf.Callback):
     def __init__(self, fid_calculator, epoch_interval=None):
         self.fid_calculator = fid_calculator
         self.epoch_interval = epoch_interval
@@ -1048,10 +1036,10 @@ with strategy.scope():
     fid_calc = FIDCalculator(
         images_x_ds=fid_photo_ds,
         images_y_ds=fid_monet_ds,
-        model_generator=generator_g,
+        model_generator=monet_generator,
         fid_model_base=fid_model)
     fid_calc.init_stat_x()
-    fid_cb = FIDCallback(fid_calculator=fid_calc, epoch_interval=EPOCH_INTERVAL_FID)
+    fid_cb = FIDCallback(fid_calculator=fid_calc, epoch_interval=None)
 
 
 # ### Launch Training
@@ -1091,6 +1079,20 @@ else:
 
 
 # ## Results
+
+# ### Plot models
+
+# In[ ]:
+
+
+get_ipython().run_line_magic('mkdir', 'images')
+
+tf.keras.utils.plot_model(BasicGenerator(), to_file='images/basic_generator.png', show_shapes=True)
+tf.keras.utils.plot_model(UNETGenerator(), to_file='images/unet_generator.png', show_shapes=True)
+tf.keras.utils.plot_model(BasicDiscriminator(), to_file='images/basic_discriminator.png', show_shapes=True)
+tf.keras.utils.plot_model(UNETDiscriminator(), to_file='images/unet_discriminator.png', show_shapes=True)
+tf.keras.utils.plot_model(gan_model, to_file='images/cycle_gan.png', show_shapes=True)
+
 
 # ### Display Converted Photos
 
