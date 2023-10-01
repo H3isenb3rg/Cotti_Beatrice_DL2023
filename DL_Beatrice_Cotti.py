@@ -592,7 +592,7 @@ def UNETDiscriminator(height=HEIGHT, width=WIDTH, channels=CHANNELS, add_noise=T
                          kernel_initializer=initializer,
                          use_bias=False)(zero_pad1) # (bs, 31, 31, 512)
     if add_noise:
-        conv = GaussianNoise(0.2)(conv)
+        conv = layers.GaussianNoise(0.2)(conv)
 
     norm1 = tfa.layers.InstanceNormalization(gamma_initializer=gamma_init)(conv)
 
@@ -771,6 +771,18 @@ class CycleGan(keras.Model):
             "monet_disc_loss": monet_disc_loss,
             "photo_disc_loss": photo_disc_loss
         }
+
+
+# ### Plot models
+
+# In[ ]:
+
+
+tf.keras.utils.plot_model(BasicGenerator(), to_file='images/basic_generator.png', show_shapes=True)
+tf.keras.utils.plot_model(UNETGenerator(), to_file='images/unet_generator.png', show_shapes=True)
+tf.keras.utils.plot_model(BasicDiscriminator(), to_file='images/basic_discriminator.png', show_shapes=True)
+tf.keras.utils.plot_model(UNETDiscriminator(), to_file='images/unet_discriminator.png', show_shapes=True)
+tf.keras.utils.plot_model(CycleGan(), to_file='images/cycle_gan.png', show_shapes=True)
 
 
 # ### Loss functions
@@ -1015,8 +1027,10 @@ with strategy.scope():
 # In[ ]:
 
 
-monet_ds = get_dataset(MONET_FILENAMES, augment=data_augment, batch_size=BATCH_SIZE)
-photo_ds = get_dataset(PHOTO_FILENAMES, augment=data_augment, batch_size=BATCH_SIZE)
+augment = None if USE_DIFF_AUGMENT else data_augment
+
+monet_ds = get_dataset(MONET_FILENAMES, augment=augment, batch_size=BATCH_SIZE)
+photo_ds = get_dataset(PHOTO_FILENAMES, augment=augment, batch_size=BATCH_SIZE)
 gan_ds = tf.data.Dataset.zip((monet_ds, photo_ds))
 
 photo_ds_eval = get_dataset(PHOTO_FILENAMES, repeat=False, shuffle=False, batch_size=1)
