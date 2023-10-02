@@ -622,6 +622,19 @@ with strategy.scope():
         photo_discriminator = BasicDiscriminator() # differentiates real photos and generated photos
 
 
+# ### Plot models
+
+# In[ ]:
+
+
+get_ipython().run_line_magic('mkdir', 'images')
+
+tf.keras.utils.plot_model(BasicGenerator(), to_file='images/basic_generator.png', show_shapes=True)
+tf.keras.utils.plot_model(UNETGenerator(), to_file='images/unet_generator.png', show_shapes=True)
+tf.keras.utils.plot_model(BasicDiscriminator(), to_file='images/basic_discriminator.png', show_shapes=True)
+tf.keras.utils.plot_model(UNETDiscriminator(), to_file='images/unet_discriminator.png', show_shapes=True)
+
+
 # ### CycleGAN
 # 
 # We will subclass a `tf.keras.Model` so that we can run `fit()` later to train our model. During the training step, the model transforms a photo to a Monet painting and then back to a photo. The difference between the original photo and the twice-transformed photo is the cycle-consistency loss. We want the original photo and the twice-transformed photo to be similar to one another.
@@ -906,7 +919,7 @@ class LinearScheduleWithWarmup(tf.keras.optimizers.schedules.LearningRateSchedul
       return lr
 
 
-# ### MiFID Calculator
+# ### FID Calculator
 
 # In[ ]:
 
@@ -978,7 +991,9 @@ def create_fid_inception_model():
 # In[ ]:
 
 
-class FIDCallback(tf.Callback):
+fids = []
+
+class FIDCallback(keras.callbacks.Callback):
     def __init__(self, fid_calculator, epoch_interval=None):
         self.fid_calculator = fid_calculator
         self.epoch_interval = epoch_interval
@@ -986,13 +1001,14 @@ class FIDCallback(tf.Callback):
     def _get_fid(self):
         fid = self.fid_calculator.calc_fid()
         print("FID score:", fid.numpy()[0,0])
+        return fid.numpy()[0,0]
 
     def on_epoch_end(self, epoch, logs=None):
         if self.epoch_interval and epoch % self.epoch_interval == 0:
             self._get_fid()
 
     def on_train_end(self, logs=None):
-        self._get_fid()
+        fids.append(self._get_fid())
 
 
 # ### Optimizers
@@ -1079,20 +1095,6 @@ else:
 
 
 # ## Results
-
-# ### Plot models
-
-# In[ ]:
-
-
-get_ipython().run_line_magic('mkdir', 'images')
-
-tf.keras.utils.plot_model(BasicGenerator(), to_file='images/basic_generator.png', show_shapes=True)
-tf.keras.utils.plot_model(UNETGenerator(), to_file='images/unet_generator.png', show_shapes=True)
-tf.keras.utils.plot_model(BasicDiscriminator(), to_file='images/basic_discriminator.png', show_shapes=True)
-tf.keras.utils.plot_model(UNETDiscriminator(), to_file='images/unet_discriminator.png', show_shapes=True)
-tf.keras.utils.plot_model(gan_model, to_file='images/cycle_gan.png', show_shapes=True)
-
 
 # ### Display Converted Photos
 
