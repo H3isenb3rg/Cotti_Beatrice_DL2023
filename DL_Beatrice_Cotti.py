@@ -974,16 +974,17 @@ class FIDCalculator(object):
 # In[ ]:
 
 
-def create_fid_inception_model():
-    inception_model_base = tf.keras.applications.InceptionV3(
-        input_shape=(256,256,3),
-        pooling="avg",
-        include_top=False)
-    mix3  = inception_model_base.get_layer("mixed9").output
-    f0 = tf.keras.layers.GlobalAveragePooling2D()(mix3)
-    inception_model = tf.keras.Model(inputs=inception_model_base.input, outputs=f0)
-    inception_model.trainable = False
-    return inception_model
+with strategy.scope():
+    def create_fid_inception_model():
+        inception_model_base = tf.keras.applications.InceptionV3(
+            input_shape=(256,256,3),
+            pooling="avg",
+            include_top=False)
+        mix3  = inception_model_base.get_layer("mixed9").output
+        f0 = tf.keras.layers.GlobalAveragePooling2D()(mix3)
+        inception_model = tf.keras.Model(inputs=inception_model_base.input, outputs=f0)
+        inception_model.trainable = False
+        return inception_model
 
 
 # In[ ]:
