@@ -20,12 +20,10 @@
 HEIGHT = 256 # Height of images
 WIDTH = 256 # Width of images
 CHANNELS = 3 # Number of channels of images (RGB => 3 channles)
-HEIGHT_RESIZE = 128 # Height of image crop augmentation
-WIDTH_RESIZE = 128 # Width of image crop augmentation
 
 TRANSFORMER_BLOCKS = 6 # Number of transformer blocks in CycleGAN model
-BATCH_SIZE = 16
-EPOCHS = 5
+BATCH_SIZE = 15
+EPOCHS = 20 
 LAMBDA_ID=1e-5
 LAMBDA=10
 GAMMA=1e-4
@@ -991,8 +989,6 @@ def create_fid_inception_model():
 # In[ ]:
 
 
-fids = []
-
 class FIDCallback(keras.callbacks.Callback):
     def __init__(self, fid_calculator, epoch_interval=None):
         self.fid_calculator = fid_calculator
@@ -1001,14 +997,13 @@ class FIDCallback(keras.callbacks.Callback):
     def _get_fid(self):
         fid = self.fid_calculator.calc_fid()
         print("FID score:", fid.numpy()[0,0])
-        return fid.numpy()[0,0]
 
     def on_epoch_end(self, epoch, logs=None):
         if self.epoch_interval and epoch % self.epoch_interval == 0:
             self._get_fid()
 
     def on_train_end(self, logs=None):
-        fids.append(self._get_fid())
+        self._get_fid()
 
 
 # ### Optimizers
