@@ -22,8 +22,8 @@ WIDTH = 256 # Width of images
 CHANNELS = 3 # Number of channels of images (RGB => 3 channles)
 
 TRANSFORMER_BLOCKS = 6 # Number of transformer blocks in CycleGAN model
-BATCH_SIZE = 15
-EPOCHS = 20 
+BATCH_SIZE = 16
+EPOCHS = 1
 LAMBDA_ID=1e-5
 LAMBDA=10
 GAMMA=1e-4
@@ -1130,7 +1130,7 @@ plt.title('Adverarial losses')
 plt.ylabel('Loss value')
 plt.xlabel('Epoch')
 plt.legend(['Monet gen loss', 'Photo gen loss'], loc='upper right')
-plt.savefig()
+plt.savefig('images/gen_losses.png')
 plt.show()
 
 
@@ -1143,7 +1143,7 @@ plt.title('Cycle consistency loss')
 plt.ylabel('Loss value')
 plt.xlabel('Epoch')
 plt.legend(['Monet cycle loss', 'Photo cycle loss'], loc='upper right')
-plt.savefig()
+plt.savefig('images/cycle_losses.png')
 plt.show()
 
 
