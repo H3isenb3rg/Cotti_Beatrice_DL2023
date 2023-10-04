@@ -23,7 +23,7 @@ CHANNELS = 3 # Number of channels of images (RGB => 3 channles)
 
 TRANSFORMER_BLOCKS = 6 # Number of transformer blocks in CycleGAN model
 BATCH_SIZE = 16
-EPOCHS = 1
+EPOCHS = 20
 LAMBDA_ID=1e-5
 LAMBDA=10
 GAMMA=1e-4
@@ -1117,34 +1117,6 @@ def display_generated_samples(ds, model, n_samples):
         plt.show()
 
 display_generated_samples(photo_ds_eval.take(8), monet_generator, 8)
-
-
-# ### History Plots
-
-# In[ ]:
-
-
-plt.plot(history.history['monet_gen_loss'])
-plt.plot(history.history['photo_gen_loss'])
-plt.title('Adverarial losses')
-plt.ylabel('Loss value')
-plt.xlabel('Epoch')
-plt.legend(['Monet gen loss', 'Photo gen loss'], loc='upper right')
-plt.show()
-plt.savefig('images/gen_losses.png')
-
-
-# In[ ]:
-
-
-plt.plot(history.history['monet_disc_loss'])
-plt.plot(history.history['photo_disc_loss'])
-plt.title('Cycle consistency loss')
-plt.ylabel('Loss value')
-plt.xlabel('Epoch')
-plt.legend(['Monet cycle loss', 'Photo cycle loss'], loc='upper right')
-plt.show()
-plt.savefig('images/cycle_losses.png')
 
 
 # ### Save Weights
