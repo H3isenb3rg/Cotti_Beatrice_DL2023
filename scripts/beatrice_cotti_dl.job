@@ -6,7 +6,7 @@
 #SBATCH --qos=normal 
 #SBATCH --mem=20000
 #SBATCH --gres=gpu:1
-#SBATCH --partition=batch
+#SBATCH --partition=long
 
 # Run notebook
 ipython DL_Beatrice_Cotti.py

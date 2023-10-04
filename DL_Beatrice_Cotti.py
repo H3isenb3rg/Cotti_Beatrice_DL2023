@@ -1083,7 +1083,7 @@ with strategy.scope():
 if USE_SAVED_WEIGHTS:
     gan_model.load_weights(WEIGHTS_FILE_NAME)
 else:
-    gan_model.fit(gan_ds,
+    history = gan_model.fit(gan_ds,
                   epochs=EPOCHS,
                   steps_per_epoch=(max(n_monet_samples, n_photo_samples)//BATCH_SIZE),
                   callbacks=callbacks
@@ -1117,6 +1117,34 @@ def display_generated_samples(ds, model, n_samples):
         plt.show()
 
 display_generated_samples(photo_ds_eval.take(8), monet_generator, 8)
+
+
+# ### History Plots
+
+# In[ ]:
+
+
+plt.plot(history.history['monet_gen_loss'])
+plt.plot(history.history['photo_gen_loss'])
+plt.title('Adverarial losses')
+plt.ylabel('Loss value')
+plt.xlabel('Epoch')
+plt.legend(['Monet gen loss', 'Photo gen loss'], loc='upper right')
+plt.savefig()
+plt.show()
+
+
+# In[ ]:
+
+
+plt.plot(history.history['monet_disc_loss'])
+plt.plot(history.history['photo_disc_loss'])
+plt.title('Cycle consistency loss')
+plt.ylabel('Loss value')
+plt.xlabel('Epoch')
+plt.legend(['Monet cycle loss', 'Photo cycle loss'], loc='upper right')
+plt.savefig()
+plt.show()
 
 
 # ### Save Weights
