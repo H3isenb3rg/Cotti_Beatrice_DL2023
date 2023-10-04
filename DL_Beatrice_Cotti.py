@@ -1130,8 +1130,8 @@ plt.title('Adverarial losses')
 plt.ylabel('Loss value')
 plt.xlabel('Epoch')
 plt.legend(['Monet gen loss', 'Photo gen loss'], loc='upper right')
-plt.savefig('images/gen_losses.png')
 plt.show()
+plt.savefig('images/gen_losses.png')
 
 
 # In[ ]:
@@ -1143,8 +1143,8 @@ plt.title('Cycle consistency loss')
 plt.ylabel('Loss value')
 plt.xlabel('Epoch')
 plt.legend(['Monet cycle loss', 'Photo cycle loss'], loc='upper right')
-plt.savefig('images/cycle_losses.png')
 plt.show()
+plt.savefig('images/cycle_losses.png')
 
 
 # ### Save Weights
