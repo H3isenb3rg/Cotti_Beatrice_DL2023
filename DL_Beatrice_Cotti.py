@@ -24,7 +24,7 @@ CHANNELS = 3 # Number of channels of images (RGB => 3 channles)
 TRANSFORMER_BLOCKS = 6 # Number of transformer blocks in CycleGAN model
 BATCH_SIZE = 16
 EPOCHS = 20
-LAMBDA_ID=1e-5
+LAMBDA_ID=1e-4
 LAMBDA=10
 GAMMA=1e-4
 LAMBDA_START = 3
@@ -35,7 +35,7 @@ GAMMA_END = 0.999
 USE_BETTER_CYCLES = True # Whether to use better CycleGAN cycles or not
 USE_UNET = True # Whether to use UNET CycleGAN model instead of the basic one
 USE_DIFF_AUGMENT = True # Whether to use DiffAugment
-USE_SAVED_WEIGHTS = True # Whether to use a pretrained model or not
+USE_SAVED_WEIGHTS = False # Whether to use a pretrained model or not
 
 WEIGHTS_FILE_NAME = "dl_beatrice_cotti.keras"
 
@@ -895,7 +895,7 @@ class LinearScheduleWithWarmup(tf.keras.optimizers.schedules.LearningRateSchedul
   def __init__(self):
     self.lr_start = 2e-4
     self.lr_max = 2e-4
-    self.lr_min = 0.
+    self.lr_min = 5e-6
     self.steps_per_epoch = int(max(n_monet_samples, n_photo_samples)//BATCH_SIZE)
     self.warmup_steps = 10
     self.total_steps = EPOCHS * self.steps_per_epoch
@@ -1132,6 +1132,21 @@ if IS_COLAB:
     files.download(WEIGHTS_FILE_NAME)
 
 
+# ### Calculate FID Score
+
+# In[ ]:
+
+
+fid_model = create_fid_inception_model()
+fid_calc = FIDCalculator(
+    images_x_ds=fid_photo_ds,
+    images_y_ds=fid_monet_ds,
+    model_generator=monet_generator,
+    fid_model_base=fid_model)
+fid_calc.init_stat_x()
+print(fid_calc.calc_fid())
+
+
 # ### Create Submission File
 
 # In[ ]:
@@ -1157,19 +1172,4 @@ import shutil
 shutil.make_archive("./submissions", 'zip', "./submissions")
 
 get_ipython().run_line_magic('rm', '-r ./submission')
-
-
-# ### Calculate FID Score
-
-# In[ ]:
-
-
-fid_model = create_fid_inception_model()
-fid_calc = FIDCalculator(
-    images_x_ds=fid_photo_ds,
-    images_y_ds=fid_monet_ds,
-    model_generator=monet_generator,
-    fid_model_base=fid_model)
-fid_calc.init_stat_x()
-print(fid_calc.calc_fid())
 
