@@ -14,7 +14,7 @@
 
 # ### Model Parameters
 
-# In[1]:
+# In[ ]:
 
 
 HEIGHT = 256 # Height of images
@@ -44,7 +44,7 @@ WEIGHTS_FILE_NAME = "dl_beatrice_cotti.keras"
 # 
 # Let's begin by identifying if the notebook is running on Colab.
 
-# In[2]:
+# In[ ]:
 
 
 import os
@@ -56,14 +56,14 @@ IS_COLAB = os.getenv("COLAB_RELEASE_TAG") is not None
 # - `kaggle`: to download the kaggle competition, and create a submission.
 # - `tensorflow-addons`: provides `InstanceNormalization` layer.
 
-# In[3]:
+# In[ ]:
 
 
 if IS_COLAB:
     get_ipython().run_line_magic('pip', 'install -q kaggle tensorflow-addons')
 
 
-# In[4]:
+# In[ ]:
 
 
 import random, re
@@ -92,7 +92,7 @@ os.environ['TF_DETERMINISTIC_OPS'] = '1'
 # 
 # Read the [distributed training documentation](https://www.tensorflow.org/guide/distributed_training) for more info on strategies.
 
-# In[5]:
+# In[ ]:
 
 
 try:
@@ -128,7 +128,7 @@ print('Number of replicas:', strategy.num_replicas_in_sync)
 # 5.   Click on `Create New API Token` - It will download `kaggle.json`  file on your machine.
 # 6.   Upload `kaggle.json` to your Google Drive if the notebook is running on Google Colab, otherwise add it to ~/.kaggle/ on your machine.
 
-# In[6]:
+# In[ ]:
 
 
 if IS_COLAB:
@@ -154,7 +154,7 @@ DATASET_PATH = "gan-getting-started"
 
 # Check the number of TFRecords and of actual image files.
 
-# In[7]:
+# In[ ]:
 
 
 # Load the filenames of the TFRecords
@@ -179,7 +179,7 @@ print(f'Photo image files: {n_photo_samples}')
 # 
 # Data augmentation for GANs should be done very carefully, especially for tasks similar to style transfer. If we apply transformations that can change too much the style of the data (e.g. brightness, contrast, saturation) it can cause the generator to do not efficiently learn the base style, so in this case, we are using only spatial transformations like flips, rotations and crops.
 
-# In[8]:
+# In[ ]:
 
 
 def data_augment(image):
@@ -216,7 +216,7 @@ def data_augment(image):
 # 
 # See https://www.kaggle.com/code/unfriendlyai/diffaugment-is-all-you-need/notebook.
 
-# In[9]:
+# In[ ]:
 
 
 with strategy.scope():
@@ -287,7 +287,7 @@ with strategy.scope():
 
 # ### Utility Functions
 
-# In[10]:
+# In[ ]:
 
 
 # Reads a tensor as an image.
@@ -344,7 +344,7 @@ def get_dataset(filenames, augment=None, repeat=True, shuffle=True, batch_size=1
 
 # Let's test if the datasets loads correctly.
 
-# In[11]:
+# In[ ]:
 
 
 monet_ds = get_dataset(MONET_FILENAMES)
@@ -366,7 +366,7 @@ plt.imshow(example_monet[0] * 0.5 + 0.5)
 
 # ### Basic Blocks
 
-# In[12]:
+# In[ ]:
 
 
 conv_initializer = tf.random_normal_initializer(mean=0.0, stddev=0.02)
@@ -457,7 +457,7 @@ def upsample(filters, size, apply_dropout=False):
 
 # ### Generator
 
-# In[13]:
+# In[ ]:
 
 
 def BasicGenerator(height=HEIGHT, width=WIDTH, channels=CHANNELS, transformer_blocks=TRANSFORMER_BLOCKS):
@@ -494,7 +494,7 @@ def BasicGenerator(height=HEIGHT, width=WIDTH, channels=CHANNELS, transformer_bl
     return generator
 
 
-# In[14]:
+# In[ ]:
 
 
 def UNETGenerator(height=HEIGHT, width=WIDTH, channels=CHANNELS):
@@ -551,7 +551,7 @@ def UNETGenerator(height=HEIGHT, width=WIDTH, channels=CHANNELS):
 
 # ### Discriminator
 
-# In[15]:
+# In[ ]:
 
 
 def BasicDiscriminator(height=HEIGHT, width=WIDTH, channels=CHANNELS):
@@ -570,7 +570,7 @@ def BasicDiscriminator(height=HEIGHT, width=WIDTH, channels=CHANNELS):
     return discriminator
 
 
-# In[16]:
+# In[ ]:
 
 
 def UNETDiscriminator(height=HEIGHT, width=WIDTH, channels=CHANNELS, add_noise=True):
@@ -604,7 +604,7 @@ def UNETDiscriminator(height=HEIGHT, width=WIDTH, channels=CHANNELS, add_noise=T
     return tf.keras.Model(inputs=inp, outputs=last)
 
 
-# In[17]:
+# In[ ]:
 
 
 with strategy.scope():
@@ -622,7 +622,7 @@ with strategy.scope():
 
 # ### Plot models
 
-# In[18]:
+# In[ ]:
 
 
 get_ipython().run_line_magic('mkdir', 'images')
@@ -639,7 +639,7 @@ tf.keras.utils.plot_model(UNETDiscriminator(), to_file='images/unet_discriminato
 # 
 # The losses are defined in the next section.
 
-# In[19]:
+# In[ ]:
 
 
 class CycleGan(keras.Model):
@@ -788,7 +788,7 @@ class CycleGan(keras.Model):
 # 
 # The discriminator loss function below compares real images to a matrix of 1s and fake images to a matrix of 0s. The perfect discriminator will output all 1s for real images and all 0s for fake images. The discriminator loss outputs the average of the real and generated loss.
 
-# In[20]:
+# In[ ]:
 
 
 with strategy.scope():
@@ -808,7 +808,7 @@ with strategy.scope():
 
 # The generator wants to fool the discriminator into thinking the generated image is real. The perfect generator will have the discriminator output only 1s. Thus, it compares the generated image to a matrix of 1s to find the loss.
 
-# In[21]:
+# In[ ]:
 
 
 with strategy.scope():
@@ -821,7 +821,7 @@ with strategy.scope():
 
 # We want our original photo and the twice transformed photo to be similar to one another. Thus, we can calculate the cycle consistency loss be finding the average of their difference.
 
-# In[22]:
+# In[ ]:
 
 
 with strategy.scope():
@@ -833,7 +833,7 @@ with strategy.scope():
 
 # The identity loss compares the image with its generator (i.e. photo with photo generator). If given a photo as input, we want it to generate the same image as the image was originally a photo. The identity loss compares the input with the output of the generator.
 
-# In[23]:
+# In[ ]:
 
 
 with strategy.scope():
@@ -846,7 +846,7 @@ with strategy.scope():
 
 # ### Loss Weights Callback
 
-# In[24]:
+# In[ ]:
 
 
 class UpdateLossWeightsCallback(keras.callbacks.Callback):
@@ -867,7 +867,7 @@ class UpdateLossWeightsCallback(keras.callbacks.Callback):
         self.model.gamma_cycle = self.gamma_values[epoch]
 
 
-# In[25]:
+# In[ ]:
 
 
 with strategy.scope():
@@ -883,7 +883,7 @@ with strategy.scope():
 # 
 # The original CycleGAN implementation used a constant learning rate schedule with a linear decay, I also found that the linear decay phase seems to be good at making the model more stable at the last epochs, you can check how the generator changes in a more conservative rate by the end looking at the gif images by the end.
 
-# In[26]:
+# In[ ]:
 
 
 class LinearScheduleWithWarmup(tf.keras.optimizers.schedules.LearningRateSchedule):
@@ -919,7 +919,7 @@ class LinearScheduleWithWarmup(tf.keras.optimizers.schedules.LearningRateSchedul
 
 # ### FID Calculator
 
-# In[27]:
+# In[ ]:
 
 
 class FIDCalculator(object):
@@ -971,7 +971,7 @@ class FIDCalculator(object):
         return fid_value
 
 
-# In[28]:
+# In[ ]:
 
 
 with strategy.scope():
@@ -987,7 +987,7 @@ with strategy.scope():
         return inception_model
 
 
-# In[29]:
+# In[ ]:
 
 
 class FIDCallback(keras.callbacks.Callback):
@@ -1009,7 +1009,7 @@ class FIDCallback(keras.callbacks.Callback):
 
 # ### Optimizers
 
-# In[30]:
+# In[ ]:
 
 
 with strategy.scope():
@@ -1024,7 +1024,7 @@ with strategy.scope():
 
 # ### Create Datasets
 
-# In[40]:
+# In[ ]:
 
 
 augment = None if USE_DIFF_AUGMENT else data_augment
@@ -1040,7 +1040,7 @@ fid_photo_ds = load_dataset(PHOTO_FILENAMES).take(1024).batch(32*strategy.num_re
 fid_monet_ds = load_dataset(MONET_FILENAMES).batch(32*strategy.num_replicas_in_sync).prefetch(32)
 
 
-# In[32]:
+# In[ ]:
 
 
 with strategy.scope():
@@ -1056,7 +1056,7 @@ with strategy.scope():
 
 # ### Launch Training
 
-# In[35]:
+# In[ ]:
 
 
 # Create GAN
@@ -1095,7 +1095,7 @@ else:
 
 # ### Display Converted Photos
 
-# In[45]:
+# In[ ]:
 
 
 def display_generated_samples(ds, model, n_samples):
@@ -1161,7 +1161,7 @@ get_ipython().run_line_magic('rm', '-r ./submission')
 
 # ### Calculate FID Score
 
-# In[46]:
+# In[ ]:
 
 
 fid_model = create_fid_inception_model()
@@ -1171,5 +1171,5 @@ fid_calc = FIDCalculator(
     model_generator=monet_generator,
     fid_model_base=fid_model)
 fid_calc.init_stat_x()
-fid_calc.calc_fid()
+print(fid_calc.calc_fid())
 
