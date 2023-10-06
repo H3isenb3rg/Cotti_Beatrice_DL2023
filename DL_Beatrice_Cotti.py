@@ -23,7 +23,7 @@ CHANNELS = 3 # Number of channels of images (RGB => 3 channles)
 
 TRANSFORMER_BLOCKS = 6 # Number of transformer blocks in CycleGAN model
 BATCH_SIZE = 16
-EPOCHS = 20
+EPOCHS = 30
 LAMBDA_ID=1e-4
 LAMBDA=10
 GAMMA=1e-4
@@ -321,7 +321,7 @@ def load_dataset(filenames):
     return dataset
 
 # Loads the dataset and applies the selected options.
-def get_dataset(filenames, augment=None, repeat=True, shuffle=True, batch_size=1):
+def get_dataset(filenames, augment=None, repeat=True, shuffle=True, cache=True, batch_size=1):
     dataset = load_dataset(filenames)
 
     if augment:
@@ -329,8 +329,8 @@ def get_dataset(filenames, augment=None, repeat=True, shuffle=True, batch_size=1
 
     dataset = dataset.map(normalize_img, num_parallel_calls=tf.data.AUTOTUNE)
 
-    dataset = dataset.cache()
-
+    if cache:
+        dataset = dataset.cache()
     if repeat:
         dataset = dataset.repeat()
     if shuffle:
@@ -897,7 +897,7 @@ class LinearScheduleWithWarmup(tf.keras.optimizers.schedules.LearningRateSchedul
     self.lr_max = 2e-4
     self.lr_min = 5e-6
     self.steps_per_epoch = int(max(n_monet_samples, n_photo_samples)//BATCH_SIZE)
-    self.warmup_steps = 10
+    self.warmup_steps = 1
     self.total_steps = EPOCHS * self.steps_per_epoch
     self.hold_max_steps = self.total_steps * 0.8
 
@@ -998,6 +998,7 @@ class FIDCallback(keras.callbacks.Callback):
     def _get_fid(self):
         fid = self.fid_calculator.calc_fid()
         print("FID score:", fid.numpy()[0,0])
+        print("FID score:", fid)
 
     def on_epoch_end(self, epoch, logs=None):
         if self.epoch_interval and epoch % self.epoch_interval == 0:
@@ -1029,8 +1030,8 @@ with strategy.scope():
 
 augment = None if USE_DIFF_AUGMENT else data_augment
 
-monet_ds = get_dataset(MONET_FILENAMES, augment=augment, batch_size=BATCH_SIZE)
-photo_ds = get_dataset(PHOTO_FILENAMES, augment=augment, batch_size=BATCH_SIZE)
+monet_ds = get_dataset(MONET_FILENAMES, augment=augment, batch_size=BATCH_SIZE, repeat=True, shuffle=False, cache=False)
+photo_ds = get_dataset(PHOTO_FILENAMES, augment=augment, batch_size=BATCH_SIZE, repeat=True, shuffle=False, cache=False)
 gan_ds = tf.data.Dataset.zip((monet_ds, photo_ds))
 
 photo_ds_eval = get_dataset(PHOTO_FILENAMES, repeat=False, shuffle=True, batch_size=1)
@@ -1125,11 +1126,32 @@ display_generated_samples(photo_ds.take(8), monet_generator, 8)
 # In[ ]:
 
 
+get_ipython().run_line_magic('rm', 'WEIGHTS_FILE_NAME')
+
 gan_model.save_weights(WEIGHTS_FILE_NAME)
 
 if IS_COLAB:
     from google.colab import files
     files.download(WEIGHTS_FILE_NAME)
+
+
+# ### Create Submission File
+
+# In[ ]:
+
+
+import PIL
+
+get_ipython().run_line_magic('rm', '-r ./submissions')
+get_ipython().run_line_magic('mkdir', './submissions')
+
+i = 1
+for img in photo_ds:
+    prediction = monet_generator(img, training=False)[0].numpy()
+    prediction = (prediction * 127.5 + 127.5).astype(np.uint8)
+    im = PIL.Image.fromarray(prediction)
+    im.save("./submissions/" + str(i) + ".jpg")
+    i += 1
 
 
 # ### Calculate FID Score
@@ -1144,32 +1166,5 @@ fid_calc = FIDCalculator(
     model_generator=monet_generator,
     fid_model_base=fid_model)
 fid_calc.init_stat_x()
-print(fid_calc.calc_fid())
-
-
-# ### Create Submission File
-
-# In[ ]:
-
-
-import PIL
-
-get_ipython().run_line_magic('mkdir', './submissions')
-
-i = 1
-for img in photo_ds:
-    prediction = monet_generator(img, training=False)[0].numpy()
-    prediction = (prediction * 127.5 + 127.5).astype(np.uint8)
-    im = PIL.Image.fromarray(prediction)
-    im.save("./submissions/" + str(i) + ".jpg")
-    i += 1
-
-
-# In[ ]:
-
-
-import shutil
-shutil.make_archive("./submissions", 'zip', "./submissions")
-
-get_ipython().run_line_magic('rm', '-r ./submission')
+print("FID: ", fid_calc.calc_fid())
 
