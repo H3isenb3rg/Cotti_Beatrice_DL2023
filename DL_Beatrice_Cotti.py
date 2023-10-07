@@ -1138,8 +1138,9 @@ if IS_COLAB:
 # In[ ]:
 
 
-print("Calculating FID")
-print("FID: ", fid_calc.calc_fid())
+with strategy.scope():
+    print("Calculating FID")
+    print("FID: ", fid_calc.calc_fid())
 
 
 # ### Create Submission File
