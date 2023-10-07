@@ -947,11 +947,6 @@ class FIDCalculator(object):
     def _calculate_frechet_distance(self, mu_1, sigma_1, mu_2, sigma_2):
         fid_epsilon = 1e-14
         covmean = tf.linalg.sqrtm(tf.cast(tf.matmul(sigma_1, sigma_2), tf.complex64))
-
-        isgood=tf.cast(tf.math.is_finite(covmean), tf.int32)
-        if tf.size(isgood)!=tf.math.reduce_sum(isgood):
-            return 0
-
         covmean = tf.cast(tf.math.real(covmean), tf.float32)
         tr_covmean = tf.linalg.trace(covmean)
         fid_value = tf.matmul(
@@ -1143,6 +1138,7 @@ if IS_COLAB:
 # In[ ]:
 
 
+print("Calculating FID")
 print("FID: ", fid_calc.calc_fid())
 
 
