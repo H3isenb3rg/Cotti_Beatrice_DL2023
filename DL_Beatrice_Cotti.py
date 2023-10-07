@@ -947,6 +947,11 @@ class FIDCalculator(object):
     def _calculate_frechet_distance(self, mu_1, sigma_1, mu_2, sigma_2):
         fid_epsilon = 1e-14
         covmean = tf.linalg.sqrtm(tf.cast(tf.matmul(sigma_1, sigma_2), tf.complex64))
+
+        isgood=tf.cast(tf.math.is_finite(covmean), tf.int32)
+        if tf.size(isgood)!=tf.math.reduce_sum(isgood):
+            return 0
+
         covmean = tf.cast(tf.math.real(covmean), tf.float32)
         tr_covmean = tf.linalg.trace(covmean)
         fid_value = tf.matmul(
@@ -1126,13 +1131,19 @@ display_generated_samples(photo_ds.take(8), monet_generator, 8)
 # In[ ]:
 
 
-get_ipython().run_line_magic('rm', 'WEIGHTS_FILE_NAME')
-
 gan_model.save_weights(WEIGHTS_FILE_NAME)
 
 if IS_COLAB:
     from google.colab import files
     files.download(WEIGHTS_FILE_NAME)
+
+
+# ### Calculate FID Score
+
+# In[ ]:
+
+
+print("FID: ", fid_calc.calc_fid())
 
 
 # ### Create Submission File
@@ -1152,12 +1163,4 @@ for img in photo_ds:
     im = PIL.Image.fromarray(prediction)
     im.save("./submissions/" + str(i) + ".jpg")
     i += 1
-
-
-# ### Calculate FID Score
-
-# In[ ]:
-
-
-print("FID: ", fid_calc.calc_fid())
 
