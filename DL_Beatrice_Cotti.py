@@ -14,7 +14,7 @@
 
 # ### Model Parameters
 
-# In[ ]:
+# In[1]:
 
 
 HEIGHT = 256 # Height of images
@@ -35,7 +35,7 @@ GAMMA_END = 0.999
 USE_BETTER_CYCLES = True # Whether to use better CycleGAN cycles or not
 USE_UNET = True # Whether to use UNET CycleGAN model instead of the basic one
 USE_DIFF_AUGMENT = True # Whether to use DiffAugment
-USE_SAVED_WEIGHTS = False # Whether to use a pretrained model or not
+USE_SAVED_WEIGHTS = True # Whether to use a pretrained model or not
 
 WEIGHTS_FILE_NAME = "dl_beatrice_cotti.keras"
 
@@ -44,7 +44,7 @@ WEIGHTS_FILE_NAME = "dl_beatrice_cotti.keras"
 # 
 # Let's begin by identifying if the notebook is running on Colab.
 
-# In[ ]:
+# In[2]:
 
 
 import os
@@ -63,7 +63,7 @@ if IS_COLAB:
     get_ipython().run_line_magic('pip', 'install -q kaggle tensorflow-addons')
 
 
-# In[ ]:
+# In[3]:
 
 
 import random, re
@@ -1037,8 +1037,8 @@ gan_ds = tf.data.Dataset.zip((monet_ds, photo_ds))
 photo_ds_eval = get_dataset(PHOTO_FILENAMES, repeat=False, shuffle=True, batch_size=1)
 monet_ds_eval = get_dataset(MONET_FILENAMES, repeat=False, shuffle=True, batch_size=1)
 
-fid_photo_ds = load_dataset(PHOTO_FILENAMES).take(1024).batch(32*strategy.num_replicas_in_sync).prefetch(32)
-fid_monet_ds = load_dataset(MONET_FILENAMES).batch(32*strategy.num_replicas_in_sync).prefetch(32)
+fid_photo_ds = load_dataset(PHOTO_FILENAMES).take(1024).batch(64).prefetch(tf.data.AUTOTUNE)
+fid_monet_ds = load_dataset(MONET_FILENAMES).batch(64).prefetch(tf.data.AUTOTUNE)
 
 
 # In[ ]:
@@ -1159,12 +1159,5 @@ for img in photo_ds:
 # In[ ]:
 
 
-fid_model = create_fid_inception_model()
-fid_calc = FIDCalculator(
-    images_x_ds=fid_photo_ds,
-    images_y_ds=fid_monet_ds,
-    model_generator=monet_generator,
-    fid_model_base=fid_model)
-fid_calc.init_stat_x()
 print("FID: ", fid_calc.calc_fid())
 
